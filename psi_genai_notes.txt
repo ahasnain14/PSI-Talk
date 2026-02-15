@@ -1,0 +1,120 @@
+
+Title: AI-Assisted PSI Monitoring & Analysis - Integration Notes
+
+Author: Pintu Agarwal
+Use Case: Qualcomm Automotive Telematics - In-Kernel PSI Enhancements
+
+------------------------------------------------------------
+1. Overview
+------------------------------------------------------------
+This document explains how to integrate the enhanced in-kernel PSI monitor
+with a GenAI-powered diagnostic assistant. The goal is to:
+- Collect real PSI + task metrics directly from the kernel
+- Feed structured data to a Python CLI tool
+- Query a GenAI model to produce human-readable performance insights
+- Use this for demos, debugging, profiling, and conference material
+
+------------------------------------------------------------
+2. Architecture
+------------------------------------------------------------
+
+ Kernel (Linux 5.15 Patched)               User Space (Python)
+ ----------------------------              -----------------------------
+ psi_monitor.c (workqueue)   ---- logs  --> collect_psi_snapshot.py
+ sysfs knobs                 ---- read  --> AI agent
+ tracepoints (optional)      ---- trace --> perf/trace-cmd/bpf
+
+ GenAI API (OpenAI Responses API)
+ ↑
+ python3 psi_ai_analyse.py
+
+------------------------------------------------------------
+3. Data Flow
+------------------------------------------------------------
+
+1. Kernel detects threshold breach
+2. Kernel prints top-N tasks: pid, comm, cpu_ms, rss_kb, io_kb, score
+3. Python script extracts PSI block from dmesg
+4. Script serializes JSON snapshot:
+   {
+     "psi": {...},
+     "thresholds": {...},
+     "top_tasks": [...],
+     "monitor_config": {...}
+   }
+5. Snapshot is sent to GenAI API
+6. AI returns human-readable analysis & actions
+
+------------------------------------------------------------
+4. Script #1: collect_psi_snapshot.py
+------------------------------------------------------------
+
+- Reads data from `dmesg`
+- Parses lines like:
+     psi_monitor: pressure high: cpu=X mem=Y io=Z
+     psi_monitor: pid= ... score= ...
+- Reads tunables from /sys/kernel/psi_monitor/
+- Writes psi_snapshot.json
+
+------------------------------------------------------------
+5. Script #2: psi_ai_analyse.py
+------------------------------------------------------------
+
+Uses Responses API:
+
+from openai import OpenAI
+client = OpenAI()
+
+response = client.responses.create(
+    model="gpt-5.1-mini",
+    input=[ ... JSON snapshot ... ]
+)
+
+------------------------------------------------------------
+6. Sample Prompt Logic (expert-tuned)
+------------------------------------------------------------
+
+SYSTEM_PROMPT = """
+You are a senior Linux performance engineer specializing in PSI, embedded systems,
+and Qualcomm automotive. Given JSON input:
+
+- Summarize system health
+- Identify culprit tasks
+- Recommend tuning steps
+- Suggest new psi_monitor weights + thresholds
+
+Keep output short, engineering-focused.
+"""
+
+
+------------------------------------------------------------
+7. Example Output (AI)
+------------------------------------------------------------
+
+System under heavy IO stall. navd and map_renderer jointly causing 43% IO pressure.
+RSS growth suggests memory blowup. Suggest lowering io_thresh=35 and
+pinning navd to CPUs 2-3.
+
+------------------------------------------------------------
+8. Demo Commands
+------------------------------------------------------------
+
+sudo python3 collect_psi_snapshot.py
+python3 psi_ai_analyse.py
+
+------------------------------------------------------------
+9. Future Enhancements
+------------------------------------------------------------
+
+- Live tracing mode using tracepoint events
+- Per-cgroup analysis
+- On-device model execution (no cloud)
+- Automated tuning via feedback loop
+
+------------------------------------------------------------
+10. Notes
+------------------------------------------------------------
+
+- Do NOT run AI API calls inside the kernel
+- Keep data anonymized for corporate policy
+- Works best when psi_monitor thresholds tuned aggressively
