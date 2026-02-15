@@ -1,5 +1,5 @@
 
-Title: AI-Assisted PSI Monitoring & Analysis - Integration Notes
+Title: AI-Assisted PSI Monitoring & Analysis Tool- Integration Notes
 
 Author: Pintu Agarwal
 Use Case: Qualcomm Automotive Telematics - In-Kernel PSI Enhancements
