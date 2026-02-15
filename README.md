@@ -13,19 +13,19 @@ This tool bridges the gap between kernel-level PSI metrics and human-readable pe
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Kernel Space (Linux 5.15+)                   │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐       │
-│  │ psi_monitor.c│───▶️│  sysfs knobs │───▶️│tracepoints│       │
-│  │  (workqueue) │    │              │    │   (optional) │       │
-│  └──────────────┘    └──────────────┘    └──────────────┘       │
+│  ┌──────────────┐      ┌──────────────┐      ┌──────────────┐   │
+│  │ psi_monitor.c│───▶️   sysfs knobs   ───▶️│  tracepoints │   │
+│  │  (workqueue) │      │              │      │  (optional)  │   │
+│  └──────────────┘      └──────────────┘      └──────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
                              │
                              ▼ dmesg logs
 ┌─────────────────────────────────────────────────────────────────┐
 │                        User Space (Python)                      │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐       │
-│  │   parser.py  │───▶️│rag_loader.py │───▶️│embedder.py│       │
-│  │  (log parse) │    │(doc builder) │    │ (vector DB)  │       │
-│  └──────────────┘    └──────────────┘    └──────────────┘       │
+│  ┌──────────────┐      ┌──────────────┐    ┌──────────────┐     │
+│  │   parser.py  │───▶️  rag_loader.py ───▶️│embedder.py  │     │
+│  │  (log parse) │      │(doc builder) │    │ (vector DB)  │     │
+│  └──────────────┘      └──────────────┘    └──────────────┘     │
 │                              │                                  │
 │                              ▼                                  │
 │                      ┌──────────────┐                           │
@@ -316,3 +316,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ---
 
 **Note**: This tool is designed for debugging and profiling embedded automotive systems. Always test thoroughly in non-production environments before deploying to production systems.
+
